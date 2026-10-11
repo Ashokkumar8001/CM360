@@ -1,0 +1,666 @@
+ 
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1.0">
+<title>CampusMind 360</title>
+
+<style>
+*{box-sizing:border-box;font-family:Arial;margin:0;padding:0}
+body{background:linear-gradient(135deg,#0f172a,#1d4ed8,#06b6d4);min-height:100vh;color:white}
+.container{max-width:1200px;margin:auto;padding:20px}
+.card{background:#ffffff20;backdrop-filter:blur(15px);padding:25px;border-radius:20px;margin:20px 0;box-shadow:0 8px 25px #0005}
+h1,h2{text-align:center;color:#bfdbfe;margin-bottom:20px}
+h3{margin:15px 0;color:#e0f2fe}
+input,select,textarea{width:100%;padding:12px;margin:8px 0;border-radius:8px;border:0;outline:none}
+textarea{min-height:100px;resize:vertical}
+button{background:#2563eb;color:white;border:0;padding:12px 18px;border-radius:8px;margin:6px;cursor:pointer;font-weight:bold}
+button:hover{background:#7c3aed}
+.hidden{display:none!important}
+.nav{display:flex;flex-wrap:wrap;justify-content:center;margin:15px}
+.item,.complaint-card,.announcement-card{background:#ffffff18;padding:15px;border-radius:12px;margin:12px 0}
+.logout{background:#dc2626}
+.success{color:#86efac;margin:10px}
+.error{color:#fca5a5;margin:10px}
+.tablebox{overflow-x:auto}
+table{width:100%;border-collapse:collapse;background:white;color:#111827;min-width:900px}
+th{background:#1e40af;color:white;padding:10px}
+td{border:1px solid #cbd5e1;padding:6px;text-align:center}
+td input{padding:7px;border:1px solid #aaa;min-width:100px}
+.badge{background:#2563eb;padding:5px 10px;border-radius:15px;font-size:12px}
+label{display:block;margin-top:10px;font-weight:bold}
+</style>
+</head>
+
+<body>
+<div class="container">
+
+<!-- LOGIN -->
+<section id="loginPage" class="card">
+<h1>CampusMind 360</h1>
+<h2>Login Portal</h2>
+
+<select id="role" onchange="roleChange()">
+<option value="student">Student Login</option>
+<option value="teacher">Teacher Login</option>
+<option value="principal">Principal Login</option>
+</select>
+
+<input id="name" placeholder="Enter Name">
+
+<div id="academicFields">
+<input id="branch" placeholder="Enter Branch (CSE, AIDS, ECE...)">
+<select id="year">
+<option>First Year</option>
+<option>Second Year</option>
+<option>Third Year</option>
+<option>Fourth Year</option>
+</select>
+</div>
+
+<button onclick="login()">Login</button>
+<p id="loginMessage"></p>
+</section>
+
+
+<!-- DASHBOARD -->
+<section id="dashboard" class="hidden">
+
+<div class="card">
+<h1 id="welcome"></h1>
+
+<div class="nav">
+<button onclick="showSection('home')">Home</button>
+<button id="timetableBtn" onclick="showSection('timetable')">Timetable</button>
+<button id="complaintBtn" onclick="showSection('complaint')">Complaint</button>
+<button onclick="showSection('announcement')">Announcements</button>
+<button id="teacherAnnouncementBtn" class="hidden"
+onclick="showSection('teacherAnnouncement')">
+Student Announcement
+</button>
+<button id="principalBtn" class="hidden"
+onclick="showSection('principal')">
+Principal Panel
+</button>
+<button class="logout" onclick="logout()">Logout</button>
+</div>
+</div>
+
+
+<!-- HOME -->
+<section id="home" class="card pageSection">
+<h2>Dashboard</h2>
+<div id="homeContent"></div>
+</section>
+
+
+<!-- TIMETABLE -->
+<section id="timetable" class="card pageSection hidden">
+<h2>Teacher Timetable</h2>
+
+<div class="tablebox">
+<table>
+<thead>
+<tr>
+<th>Day</th>
+<script>
+for(let i=1;i<=8;i++){
+document.write(`<th>Period ${i}</th>`);
+}
+</script>
+</tr>
+</thead>
+<tbody id="timetableBody"></tbody>
+</table>
+</div>
+
+<button onclick="saveTimetable()">Save / Update Timetable</button>
+<p id="savedMessage"></p>
+</section>
+
+
+<!-- STUDENT COMPLAINT -->
+<section id="complaint" class="card pageSection hidden">
+<h2>Student Complaint</h2>
+
+<input id="location" placeholder="Problem Location">
+<input id="problem" placeholder="Problem Type">
+<textarea id="details" placeholder="Explain Your Problem"></textarea>
+
+<label>Send Complaint To:</label>
+<select id="complaintTeacher">
+<option value="">Select Teacher / Principal</option>
+</select>
+
+<button onclick="submitComplaint()">Send Complaint</button>
+<p id="complaintMessage"></p>
+</section>
+
+
+<!-- ANNOUNCEMENTS -->
+<section id="announcement" class="card pageSection hidden">
+<h2>Announcements</h2>
+<div id="announcementList"></div>
+</section>
+
+
+<!-- TEACHER ANNOUNCEMENT -->
+<section id="teacherAnnouncement" class="card pageSection hidden">
+<h2>Teacher Announcement</h2>
+
+<input id="teacherAnnouncementTitle"
+placeholder="Announcement Title">
+
+<textarea id="teacherAnnouncementText"
+placeholder="Announcement Message"></textarea>
+
+<p>Announcement To:
+<b id="teacherAnnouncementAudience"></b>
+</p>
+
+<button onclick="createTeacherAnnouncement()">
+Send Announcement
+</button>
+
+<p id="teacherAnnouncementMessage"></p>
+</section>
+
+
+<!-- PRINCIPAL PANEL -->
+<section id="principal" class="card pageSection hidden">
+<h2>Principal Panel</h2>
+
+<h3>Create Public Announcement</h3>
+
+<input id="announcementTitle"
+placeholder="Announcement Title">
+
+<textarea id="announcementText"
+placeholder="Announcement Message"></textarea>
+
+<label>Select Audience:</label>
+<select id="announcementAudience">
+<option>First Year Students</option>
+<option>Second Year Students</option>
+<option>Third Year Students</option>
+<option>Fourth Year Students</option>
+<option>First Year Teachers</option>
+<option>Second Year Teachers</option>
+<option>Third Year Teachers</option>
+<option>Fourth Year Teachers</option>
+<option>All Year Students</option>
+<option>All Year Teachers</option>
+</select>
+
+<button onclick="createAnnouncement()">Publish Announcement</button>
+<p id="announcementMessage"></p>
+
+<h3>All Complaints</h3>
+<div id="allComplaints"></div>
+</section>
+
+</section>
+</div>
+
+
+<script>
+let currentUser="",currentRole="",currentBranch="",currentYear="";
+
+let timetable=JSON.parse(localStorage.getItem("timetable")||"{}");
+let complaints=JSON.parse(localStorage.getItem("complaints")||"[]");
+let announcements=JSON.parse(localStorage.getItem("announcements")||"[]");
+let teachers=JSON.parse(localStorage.getItem("teachers")||"[]");
+
+const days=["Monday","Tuesday","Wednesday","Thursday","Friday","Saturday"];
+
+function escapeHTML(value){
+return String(value||"")
+.replace(/&/g,"&amp;")
+.replace(/</g,"&lt;")
+.replace(/>/g,"&gt;")
+.replace(/"/g,"&quot;")
+.replace(/'/g,"&#039;");
+}
+
+function roleChange(){
+let role=document.getElementById("role").value;
+document.getElementById("academicFields").style.display=
+role==="principal"?"none":"block";
+}
+
+function login(){
+
+let role=document.getElementById("role").value;
+let name=document.getElementById("name").value.trim();
+let branch=document.getElementById("branch").value.trim();
+let year=document.getElementById("year").value;
+let msg=document.getElementById("loginMessage");
+
+if(!name){
+msg.className="error";
+msg.textContent="Please enter your name.";
+return;
+}
+
+if(role!=="principal"&&(!branch||!year)){
+msg.className="error";
+msg.textContent="Please enter branch and year.";
+return;
+}
+
+currentUser=name;
+currentRole=role;
+currentBranch=branch;
+currentYear=year;
+
+if(role==="teacher"){
+
+let exists=teachers.some(t=>
+t.name.toLowerCase()===name.toLowerCase()&&
+t.branch.toLowerCase()===branch.toLowerCase()&&
+t.year===year
+);
+
+if(!exists){
+teachers.push({name,branch,year});
+localStorage.setItem("teachers",JSON.stringify(teachers));
+}
+
+}
+
+document.getElementById("loginPage").classList.add("hidden");
+document.getElementById("dashboard").classList.remove("hidden");
+
+document.getElementById("welcome").textContent="Welcome, "+currentUser;
+
+document.getElementById("timetableBtn").classList.toggle("hidden",role!=="teacher");
+document.getElementById("complaintBtn").classList.toggle("hidden",role!=="student");
+document.getElementById("teacherAnnouncementBtn").classList.toggle("hidden",role!=="teacher");
+document.getElementById("principalBtn").classList.toggle("hidden",role!=="principal");
+
+if(role==="teacher"){
+document.getElementById("teacherAnnouncementAudience").textContent=
+currentYear+" Students";
+}
+
+loadAll();
+
+showSection(role==="principal"?"principal":"home");
+}
+
+function showSection(sectionName){
+
+document.querySelectorAll(".pageSection").forEach(s=>
+s.classList.add("hidden")
+);
+
+document.getElementById(sectionName).classList.remove("hidden");
+
+if(sectionName==="complaint")loadComplaintTeachers();
+if(sectionName==="timetable")loadTimetable();
+if(sectionName==="announcement")loadAnnouncements();
+if(sectionName==="principal")loadPrincipal();
+
+}
+
+function loadAll(){
+loadHome();
+loadAnnouncements();
+loadPrincipal();
+}
+
+function loadHome(){
+
+let home=document.getElementById("homeContent");
+
+home.innerHTML=`
+<div class="item">
+<h3>${escapeHTML(currentRole.toUpperCase())} Dashboard</h3>
+<p>Name: ${escapeHTML(currentUser)}</p>
+${currentRole!=="principal"?`
+<p>Branch: ${escapeHTML(currentBranch)}</p>
+<p>Year: ${escapeHTML(currentYear)}</p>`:""}
+<p>Welcome to CampusMind 360.</p>
+</div>`;
+}
+
+
+// YEAR-BASED TEACHERS AND PRINCIPAL LAST
+function loadComplaintTeachers(){
+
+if(currentRole!=="student")return;
+
+let select=document.getElementById("complaintTeacher");
+
+select.innerHTML=
+`<option value="">Select Teacher / Principal</option>`;
+
+let yearTeachers=teachers.filter(t=>t.year===currentYear);
+
+yearTeachers.forEach(teacher=>{
+
+let option=document.createElement("option");
+
+option.value=
+`${teacher.name}|${teacher.branch}|${teacher.year}`;
+
+option.textContent=
+`${teacher.name} - ${teacher.branch}`;
+
+select.appendChild(option);
+
+});
+
+// PRINCIPAL ALWAYS LAST
+let principal=document.createElement("option");
+principal.value="Principal";
+principal.textContent="Principal";
+select.appendChild(principal);
+
+}
+
+
+function submitComplaint(){
+
+let location=document.getElementById("location").value.trim();
+let problem=document.getElementById("problem").value.trim();
+let details=document.getElementById("details").value.trim();
+let recipient=document.getElementById("complaintTeacher").value;
+let msg=document.getElementById("complaintMessage");
+
+if(!location||!problem||!details||!recipient){
+msg.className="error";
+msg.textContent="Please fill all fields.";
+return;
+}
+
+let recipientName=recipient.includes("|")?
+recipient.split("|")[0]:recipient;
+
+complaints.push({
+id:Date.now(),
+student:currentUser,
+branch:currentBranch,
+year:currentYear,
+recipient:recipientName,
+location,
+problem,
+details,
+status:"Pending",
+date:new Date().toLocaleString()
+});
+
+localStorage.setItem("complaints",JSON.stringify(complaints));
+
+msg.className="success";
+msg.textContent="Complaint sent successfully.";
+
+document.getElementById("location").value="";
+document.getElementById("problem").value="";
+document.getElementById("details").value="";
+
+}
+
+
+// PRINCIPAL ANNOUNCEMENT
+function createAnnouncement(){
+
+let title=document.getElementById("announcementTitle").value.trim();
+let text=document.getElementById("announcementText").value.trim();
+let audience=document.getElementById("announcementAudience").value;
+let msg=document.getElementById("announcementMessage");
+
+if(!title||!text){
+msg.className="error";
+msg.textContent="Enter title and message.";
+return;
+}
+
+announcements.push({
+id:Date.now(),
+title,
+text,
+audience,
+createdBy:currentUser,
+date:new Date().toLocaleString()
+});
+
+localStorage.setItem("announcements",JSON.stringify(announcements));
+
+msg.className="success";
+msg.textContent="Announcement published successfully.";
+
+document.getElementById("announcementTitle").value="";
+document.getElementById("announcementText").value="";
+
+loadAnnouncements();
+}
+
+
+// TEACHER ANNOUNCEMENT TO OWN YEAR STUDENTS ONLY
+function createTeacherAnnouncement(){
+
+if(currentRole!=="teacher")return;
+
+let title=document.getElementById("teacherAnnouncementTitle").value.trim();
+let text=document.getElementById("teacherAnnouncementText").value.trim();
+let msg=document.getElementById("teacherAnnouncementMessage");
+
+if(!title||!text){
+msg.className="error";
+msg.textContent="Enter title and message.";
+return;
+}
+
+announcements.push({
+id:Date.now(),
+title,
+text,
+audience:currentYear+" Students",
+createdBy:currentUser,
+teacherBranch:currentBranch,
+date:new Date().toLocaleString()
+});
+
+localStorage.setItem("announcements",JSON.stringify(announcements));
+
+msg.className="success";
+msg.textContent="Sent to your year students.";
+
+document.getElementById("teacherAnnouncementTitle").value="";
+document.getElementById("teacherAnnouncementText").value="";
+
+loadAnnouncements();
+}
+
+
+// ANNOUNCEMENT FILTER
+function loadAnnouncements(){
+
+let list=document.getElementById("announcementList");
+if(!list)return;
+
+let filtered=[];
+
+if(currentRole==="principal"){
+filtered=announcements;
+}
+else if(currentRole==="student"){
+filtered=announcements.filter(a=>
+a.audience===currentYear+" Students"||
+a.audience==="All Year Students"
+);
+}
+else if(currentRole==="teacher"){
+filtered=announcements.filter(a=>
+a.audience===currentYear+" Teachers"||
+a.audience==="All Year Teachers"
+);
+}
+
+if(filtered.length===0){
+list.innerHTML=`<div class="item">No announcements available.</div>`;
+return;
+}
+
+list.innerHTML=filtered.slice().reverse().map(a=>`
+<div class="announcement-card">
+<h3>${escapeHTML(a.title)}</h3>
+<p>${escapeHTML(a.text)}</p>
+<p><span class="badge">${escapeHTML(a.audience)}</span></p>
+<small>
+Published by: ${escapeHTML(a.createdBy)}<br>
+Date: ${escapeHTML(a.date)}
+</small>
+</div>
+`).join("");
+}
+
+
+// TIMETABLE LOAD
+function loadTimetable(){
+
+if(currentRole!=="teacher")return;
+
+let body=document.getElementById("timetableBody");
+body.innerHTML="";
+
+days.forEach(day=>{
+
+let row=`<tr><th>${day}</th>`;
+
+for(let period=1;period<=8;period++){
+
+let saved=timetable[currentUser]&&
+timetable[currentUser][day]&&
+timetable[currentUser][day][period];
+
+row+=`
+<td>
+<input placeholder="Class"
+data-day="${day}" data-period="${period}"
+data-type="class"
+value="${escapeHTML(saved?saved.className:"")}">
+
+<input placeholder="Subject"
+data-day="${day}" data-period="${period}"
+data-type="subject"
+value="${escapeHTML(saved?saved.subject:"")}">
+</td>`;
+}
+
+row+="</tr>";
+body.innerHTML+=row;
+});
+}
+
+
+// TIMETABLE SAVE
+function saveTimetable(){
+
+if(!timetable[currentUser])timetable[currentUser]={};
+
+days.forEach(day=>{
+
+timetable[currentUser][day]={};
+
+for(let period=1;period<=8;period++){
+
+let classInput=document.querySelector(
+`input[data-day="${day}"][data-period="${period}"][data-type="class"]`
+);
+
+let subjectInput=document.querySelector(
+`input[data-day="${day}"][data-period="${period}"][data-type="subject"]`
+);
+
+timetable[currentUser][day][period]={
+className:classInput.value,
+subject:subjectInput.value
+};
+
+}
+});
+
+localStorage.setItem("timetable",JSON.stringify(timetable));
+
+let msg=document.getElementById("savedMessage");
+msg.className="success";
+msg.textContent="Timetable saved successfully.";
+}
+
+
+// PRINCIPAL COMPLAINTS
+function loadPrincipal(){
+
+if(currentRole!=="principal")return;
+
+let box=document.getElementById("allComplaints");
+
+if(complaints.length===0){
+box.innerHTML=`<div class="item">No complaints available.</div>`;
+return;
+}
+
+box.innerHTML=complaints.slice().reverse().map(c=>`
+
+<div class="complaint-card">
+<h3>Complaint #${c.id}</h3>
+
+<p><b>Student:</b> ${escapeHTML(c.student)}</p>
+<p><b>Branch:</b> ${escapeHTML(c.branch)}</p>
+<p><b>Year:</b> ${escapeHTML(c.year)}</p>
+<p><b>Recipient:</b> ${escapeHTML(c.recipient)}</p>
+<p><b>Location:</b> ${escapeHTML(c.location)}</p>
+<p><b>Problem:</b> ${escapeHTML(c.problem)}</p>
+<p><b>Details:</b> ${escapeHTML(c.details)}</p>
+<p><b>Date:</b> ${escapeHTML(c.date)}</p>
+<p><b>Status:</b>
+<span class="badge">${escapeHTML(c.status)}</span>
+</p>
+
+<select onchange="updateComplaintStatus(${c.id},this.value)">
+<option ${c.status==="Pending"?"selected":""}>Pending</option>
+<option ${c.status==="In Progress"?"selected":""}>In Progress</option>
+<option ${c.status==="Resolved"?"selected":""}>Resolved</option>
+<option ${c.status==="Rejected"?"selected":""}>Rejected</option>
+</select>
+
+</div>
+`).join("");
+}
+
+
+function updateComplaintStatus(id,status){
+
+let complaint=complaints.find(c=>c.id===id);
+if(!complaint)return;
+
+complaint.status=status;
+
+localStorage.setItem("complaints",JSON.stringify(complaints));
+loadPrincipal();
+}
+
+
+// LOGOUT
+function logout(){
+
+currentUser="";
+currentRole="";
+currentBranch="";
+currentYear="";
+
+document.getElementById("dashboard").classList.add("hidden");
+document.getElementById("loginPage").classList.remove("hidden");
+
+document.getElementById("name").value="";
+document.getElementById("branch").value="";
+document.getElementById("loginMessage").textContent="";
+
+}
+
+</script>
+</body>
+</html>
